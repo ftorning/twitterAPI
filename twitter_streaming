@@ -1,0 +1,49 @@
+# Name, Twitter Export Tool
+# Author, Fraser Torning
+# Date, 5/16/17
+# References,
+    # http://docs.tweepy.org
+    # http://stackoverflow.com/questions/14265082/query-regarding-pagination-in-tweepy-get-followers-of-a-particular-twitter-use
+
+import tweepy
+import itertools
+
+# Add tokens and secrets from Twitter Dev account
+access_token = "#"
+access_token_secret = "#"
+consumer_key = "#"
+consumer_secret = "#"
+
+# build paginator
+def paginate(iterable, page_size):
+    while True:
+        i1, i2 = itertools.tee(iterable)
+        iterable, page = (itertools.islice(i1, page_size, None),
+                list(itertools.islice(i2, page_size)))
+        if len(page) == 0:
+            break
+        yield page
+
+
+# assign credentials
+auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+auth.set_access_token(access_token, access_token_secret)
+api = tweepy.API(auth)
+
+# add the screen_name of user being tracked
+tracked = 'dalila_says'
+
+user = api.get_user(tracked)
+followers = api.followers_ids(tracked)
+following = api.friends_ids(tracked)
+
+# select either followers or following
+selected_list = following
+
+# iter process
+for page in paginate(selected_list, 100):
+    results = api.lookup_users(user_ids=page)
+    for result in results:
+        assert isinstance(result.screen_name, object)
+        print str(result.id) + ',' + str(result.screen_name) + ',' + result.name.encode('utf-8')
+
